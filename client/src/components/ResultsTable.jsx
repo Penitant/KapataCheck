@@ -21,7 +21,7 @@ export default function ResultsTable({ rows = [], editable = false, onChange }) 
   }
   return (
     <motion.div
-      className="max-w-6xl mx-auto text-white bg-slate-900/90 rounded-xl p-0 shadow-xl ring-1 ring-slate-800 overflow-hidden"
+      className="max-w-6xl mx-auto text-white glass rounded-2xl p-0 shadow-2xl overflow-hidden"
       initial={fadeIn.initial}
       animate={fadeIn.animate}
       transition={fadeIn.transition}
@@ -36,16 +36,16 @@ export default function ResultsTable({ rows = [], editable = false, onChange }) 
       {hasData && (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-white">
-            <thead className="bg-slate-800/90 text-slate-200">
+            <thead className="bg-white/[0.06] text-slate-200">
               <tr>
-                <th className="py-4 pl-6 pr-4 text-sm font-semibold tracking-wide uppercase">File 1</th>
-                <th className="py-4 pr-4 text-sm font-semibold tracking-wide uppercase">File 2</th>
-                <th className="py-4 pr-4 text-sm font-semibold tracking-wide uppercase">Score</th>
-                <th className="py-4 pr-4 text-sm font-semibold tracking-wide uppercase">Risk</th>
+                <th className="py-4 pl-6 pr-4 text-xs sm:text-sm font-semibold tracking-[0.12em] uppercase text-white/80">File 1</th>
+                <th className="py-4 pr-4 text-xs sm:text-sm font-semibold tracking-[0.12em] uppercase text-white/80">File 2</th>
+                <th className="py-4 pr-4 text-xs sm:text-sm font-semibold tracking-[0.12em] uppercase text-white/80">Score</th>
+                <th className="py-4 pr-4 text-xs sm:text-sm font-semibold tracking-[0.12em] uppercase text-white/80">Risk</th>
                 {editable && (
                   <>
-                    <th className="py-4 pr-4 text-sm font-semibold tracking-wide uppercase">Enter Score</th>
-                    <th className="py-4 pr-6 text-sm font-semibold tracking-wide uppercase">Risk Category</th>
+                    <th className="py-4 pr-4 text-xs sm:text-sm font-semibold tracking-[0.12em] uppercase text-white/80">Enter Score</th>
+                    <th className="py-4 pr-6 text-xs sm:text-sm font-semibold tracking-[0.12em] uppercase text-white/80">Risk Category</th>
                   </>
                 )}
               </tr>
@@ -57,21 +57,21 @@ export default function ResultsTable({ rows = [], editable = false, onChange }) 
               {rows.map((r, i) => (
                 <motion.tr
                   key={r.id ?? i}
-                  className="border-t border-slate-800 hover:bg-slate-800/70"
+                  className="border-t border-white/10 hover:bg-white/[0.04]"
                   initial={fadeInUp.initial}
                   animate={fadeInUp.animate}
                   transition={{ ...fadeInUp.transition, delay: 0.02 * i }}
                 >
-                  <td className="py-4 pl-6 pr-4 align-top max-w-xs truncate text-lg" title={r.original_file1 || r.file1}>{r.original_file1 || r.file1}</td>
-                  <td className="py-4 pr-4 align-top max-w-xs truncate text-lg" title={r.original_file2 || r.file2}>{r.original_file2 || r.file2}</td>
-                  <td className="py-4 pr-4 align-top text-lg">
+                  <td className="py-4 pl-6 pr-4 align-top max-w-xs truncate text-base sm:text-lg" title={r.original_file1 || r.file1}>{r.original_file1 || r.file1}</td>
+                  <td className="py-4 pr-4 align-top max-w-xs truncate text-base sm:text-lg" title={r.original_file2 || r.file2}>{r.original_file2 || r.file2}</td>
+                  <td className="py-4 pr-4 align-top text-base sm:text-lg">
                     {typeof (r.score ?? r.learned_prob) === 'number' ? (
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-sky-900 text-sky-200 ring-1 ring-sky-800">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-cyan-900/60 text-cyan-200 ring-1 ring-cyan-700/60">
                         {(r.score ?? r.learned_prob).toFixed(3)}
                       </span>
                     ) : '-'}
                   </td>
-                  <td className="py-4 pr-4 align-top text-lg">
+                  <td className="py-4 pr-4 align-top text-base sm:text-lg">
                     {r.input_risk || r.risk || r.learned_risk ? (
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-md ${riskClass(r.input_risk || r.risk || r.learned_risk)}`}>
                         {r.input_risk || r.risk || r.learned_risk}
@@ -88,14 +88,14 @@ export default function ResultsTable({ rows = [], editable = false, onChange }) 
                           max="1"
                           value={r.input_score ?? ''}
                           onChange={e => onChange?.(r.id ?? i, 'input_score', e.target.value)}
-                          className="w-32 bg-slate-900 text-white border border-slate-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                          className="w-32 bg-white/5 text-white border border-white/10 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                         />
                       </td>
                       <td className="py-4 pr-6 align-top">
                         <select
                           value={r.input_risk ?? ''}
                           onChange={e => onChange?.(r.id ?? i, 'input_risk', e.target.value)}
-                          className="bg-slate-900 text-white border border-slate-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="bg-white/5 text-white border border-white/10 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         >
                           <option value="">Select</option>
                           {['Normal', 'Low', 'Medium', 'High'].map(opt => (

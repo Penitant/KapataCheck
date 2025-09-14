@@ -97,11 +97,11 @@ export default function FeedbackPage() {
   return (
     <div className="min-h-screen">
       <section className="container mx-auto px-4 py-12">
-        <motion.div className="max-w-6xl mx-auto text-white p-8"
+        <motion.div className="max-w-6xl mx-auto text-white p-2 sm:p-4"
           initial={fadeIn.initial} animate={fadeIn.animate} transition={fadeIn.transition}>
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h2 className="text-3xl font-extrabold tracking-tight">Feedback</h2>
-            <motion.button onClick={submit} className="px-5 py-2.5 rounded-md bg-sky-600 text-white hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-950 transition"
+            <motion.button onClick={submit} className="px-5 py-2.5 rounded-md bg-gradient-to-r from-cyan-500 to-emerald-500 text-white hover:from-cyan-400 hover:to-emerald-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/70 focus:ring-offset-2 focus:ring-offset-slate-950 transition shadow-lg"
               whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
               Submit All
             </motion.button>

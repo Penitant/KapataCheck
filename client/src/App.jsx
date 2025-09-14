@@ -64,7 +64,9 @@ function App() {
 
   return (
     <ResultsProvider>
-      <AppRoutes />
+      <div className="app-shell app-bg">
+        <AppRoutes />
+      </div>
     </ResultsProvider>
   )
 }

@@ -115,18 +115,18 @@ export function UploaderSection() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-12 px-4">
-      <div className="flex flex-col items-center space-y-6">
+    <div className="max-w-5xl mx-auto py-10 px-4">
+      <div className="flex flex-col items-center space-y-6 w-full">
         <motion.div
           {...getRootProps()}
           className={`
-            text-center rounded-xl h-64 w-full max-w-3xl
+            text-center rounded-2xl h-72 w-full max-w-3xl
             flex flex-col items-center justify-center 
             cursor-pointer transition-all duration-300
-            bg-slate-900/90 ring-1 ring-slate-800
+            glass shadow-xl
             ${isDragActive 
-              ? 'scale-105 bg-slate-900' 
-              : 'hover:bg-slate-800/80'
+              ? 'scale-[1.02]' 
+              : 'hover:shadow-[0_0_0_1px_rgba(148,163,184,.18)] hover:scale-[1.01]'
             }
             ${isProcessing ? 'cursor-not-allowed opacity-75' : ''}
           `}
@@ -138,10 +138,10 @@ export function UploaderSection() {
           
           {isProcessing ? (
             <div className="flex flex-col items-center space-y-4">
-        <div className="text-white text-2xl font-semibold">Uploading documents...</div>
-        <div className="w-64 bg-slate-700 rounded-full h-3 overflow-hidden">
+              <div className="text-white text-2xl font-semibold">Uploading documents...</div>
+              <div className="w-72 bg-white/10 rounded-full h-3 overflow-hidden">
                 <motion.div 
-          className="bg-sky-500 h-3 rounded-full"
+                  className="h-3 rounded-full bg-gradient-to-r from-cyan-400 via-sky-400 to-emerald-400"
                   style={{ width: `${progress}%` }}
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
@@ -159,13 +159,13 @@ export function UploaderSection() {
             </motion.div>
           ) : (
             <div className="flex flex-col items-center space-y-3">
-        <motion.img src={fileSvg} alt="File Icon" className="w-14 h-14 brightness-0 invert" {...softScale} />
-        <motion.div className="text-2xl font-semibold text-white" variants={fadeInUp} initial="initial" animate="animate">Drag & drop EoI documents here</motion.div>
-        <motion.div className="text-base text-white/80" variants={fadeInUp} initial="initial" animate="animate" transition={{ delay: 0.05 }}>or click to select files</motion.div>
-        <motion.div className="text-sm text-white/70 mt-2" variants={fadeInUp} initial="initial" animate="animate" transition={{ delay: 0.1 }}>
+              <motion.img src={fileSvg} alt="File Icon" className="w-16 h-16 brightness-0 invert drop-shadow-[0_0_18px_rgba(34,211,238,.2)]" {...softScale} />
+              <motion.div className="text-2xl font-semibold text-white" variants={fadeInUp} initial="initial" animate="animate">Drag & drop EoI documents here</motion.div>
+              <motion.div className="text-base text-white/80" variants={fadeInUp} initial="initial" animate="animate" transition={{ delay: 0.05 }}>or click to select files</motion.div>
+              <motion.div className="text-sm text-white/70 mt-2" variants={fadeInUp} initial="initial" animate="animate" transition={{ delay: 0.1 }}>
                 Upload 2+ Company Profiles or Past Experience documents
               </motion.div>
-        <motion.div className="text-sm text-white/70" variants={fadeInUp} initial="initial" animate="animate" transition={{ delay: 0.15 }}>
+              <motion.div className="text-sm text-white/70" variants={fadeInUp} initial="initial" animate="animate" transition={{ delay: 0.15 }}>
                 Supported formats: PDF, DOCX, TXT, MD, CSV | Max size: 25MB each
               </motion.div>
             </div>
@@ -173,12 +173,12 @@ export function UploaderSection() {
         </motion.div>
 
         {error && (
-      <motion.div className="text-white p-4 max-w-2xl w-full text-center" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div className="text-white p-4 max-w-2xl w-full text-center glass rounded-xl" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <div className="font-semibold">❌ Error</div>
             <div className="mt-1">{error}</div>
             <motion.button 
               onClick={resetUpload}
-        className="mt-3 px-4 py-2 bg-rose-600 text-white rounded-md hover:bg-rose-500 transition-colors"
+              className="mt-3 px-4 py-2 bg-rose-600 text-white rounded-md hover:bg-rose-500 transition-colors"
               whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}
             >
               Try Again
@@ -187,12 +187,12 @@ export function UploaderSection() {
         )}
 
         {successMessage && (
-          <motion.div className="text-white p-4 max-w-2xl w-full text-center" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div className="text-white p-4 max-w-2xl w-full text-center glass rounded-xl" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <div className="font-semibold">✅ Success</div>
             <div className="mt-1">{successMessage}</div>
             
             {uploadedFiles.length > 0 && (
-              <div className="mt-3 text-left ring-1 ring-slate-800 p-3 rounded-md max-h-48 overflow-y-auto bg-slate-900/80">
+              <div className="mt-3 text-left p-3 rounded-md max-h-48 overflow-y-auto bg-white/5 border border-white/10">
                 <div className="text-sm font-medium mb-2 text-white">Uploaded files</div>
                 <ul className="text-sm space-y-1 text-white/80">
                   {uploadedFiles.map((file, index) => (
@@ -209,7 +209,7 @@ export function UploaderSection() {
             
             <motion.button 
               onClick={resetUpload}
-              className="mt-3 px-6 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-500 transition-colors font-medium"
+              className="mt-3 px-6 py-2 rounded-md bg-gradient-to-r from-cyan-500 to-emerald-500 text-white hover:from-cyan-400 hover:to-emerald-400 transition-colors font-medium shadow-lg"
               whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}
             >
               Upload More Documents

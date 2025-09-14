@@ -1,2 +1,9 @@
 @import 'tailwindcss';
 
+/* Page paddings and stacking context */
+.app-shell {
+	position: relative;
+	min-height: 100vh;
+	isolation: isolate; /* allow bg overlays behind content */
+}
+
