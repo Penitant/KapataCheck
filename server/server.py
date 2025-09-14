@@ -33,7 +33,9 @@ CORS(app, resources={r"/*": {"origins": [ALLOWED_ORIGIN]}}, supports_credentials
 
 # Set upload folder
 UPLOAD_FOLDER = "server/uploads"
+RUNS_FOLDER = path.join(UPLOAD_FOLDER, "runs")
 makedirs(UPLOAD_FOLDER, exist_ok=True)
+makedirs(RUNS_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Initialize SQLite DB
@@ -214,6 +216,35 @@ def verify_endpoint():
             r["original_file1"] = original_name_by_basename.get(b1, b1)
             r["original_file2"] = original_name_by_basename.get(b2, b2)
 
+        # Persist analysis to a run folder and optionally cleanup upload temps
+        run_id = uuid.uuid4().hex
+        run_dir = path.join(RUNS_FOLDER, run_id)
+        makedirs(run_dir, exist_ok=True)
+        # Save analysis JSON and CSV in run_dir
+        try:
+            import json as _json
+            import pandas as _pd
+            _pd.DataFrame(results).to_csv(path.join(run_dir, "results.csv"), index=False)
+            with open(path.join(run_dir, "results.json"), "w", encoding="utf-8") as f:
+                _json.dump(results, f, ensure_ascii=False, indent=2)
+            # Save meta
+            meta = {
+                "model": model_name,
+                "paraphrase": use_para,
+                "cross_encoder": use_ce,
+                "hash": use_hash,
+                "hybrid": use_hybrid,
+                "cluster": use_cluster,
+                "ce_top_k": ce_top_k,
+                "count": len(results),
+                "original_name_by_basename": original_name_by_basename,
+                "saved_paths": saved_paths,
+            }
+            with open(path.join(run_dir, "meta.json"), "w", encoding="utf-8") as f:
+                _json.dump(meta, f, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
+
         # Cleanup: delete saved UUID files unless explicitly kept via ?keep=true
         keep = (request.args.get("keep") or "").lower() in {"1", "true", "yes"}
         if not keep:
@@ -224,21 +255,75 @@ def verify_endpoint():
                     pass
 
         payload = {
-                "model": model_name,
-                "paraphrase": use_para,
-                "cross_encoder": use_ce,
-                "hash": use_hash,
-                "hybrid": use_hybrid,
-                "cluster": use_cluster,
-                "ce_top_k": ce_top_k,
-                "count": len(results),
-                "results": results,
-            }
+            "model": model_name,
+            "paraphrase": use_para,
+            "cross_encoder": use_ce,
+            "hash": use_hash,
+            "hybrid": use_hybrid,
+            "cluster": use_cluster,
+            "ce_top_k": ce_top_k,
+            "count": len(results),
+            "results": results,
+            "run_id": run_id,
+        }
         if include_timings:
             payload["timings"] = {"analyze_ms": int((t1 - t0) * 1000)}
         return jsonify(payload)
     except Exception as e:
         return jsonify({"error": "internal_error", "detail": str(e), "trace": _tb.format_exc()}), 500
+
+
+@app.route("/prepare_feedback_folder", methods=["POST"])
+def prepare_feedback_folder():
+    """Create a derived folder from a run with two new columns (input_score,input_risk)."""
+    import json as _json
+    data = request.get_json(silent=True) or {}
+    run_id = data.get("run_id")
+    rows = data.get("rows") or []
+    if not run_id:
+        return jsonify({"error": "missing_run_id"}), 400
+    run_dir = path.join(RUNS_FOLDER, run_id)
+    if not path.isdir(run_dir):
+        return jsonify({"error": "run_not_found"}), 404
+    # Read results.csv if present
+    csv_path = path.join(run_dir, "results.csv")
+    json_path = path.join(run_dir, "results.json")
+    try:
+        import pandas as _pd
+        if path.exists(csv_path):
+            df = _pd.read_csv(csv_path)
+        elif path.exists(json_path):
+            import pandas as _pd
+            with open(json_path, "r", encoding="utf-8") as f:
+                df = _pd.DataFrame(_json.load(f))
+        else:
+            df = _pd.DataFrame([])
+        # Map feedback rows by (file1,file2) using original filenames if present
+        fb_map = {}
+        for r in rows:
+            k = (str(r.get("file1")), str(r.get("file2")))
+            fb_map[k] = {"input_score": r.get("input_score"), "input_risk": r.get("input_risk")}
+        # Compute keys from df
+        def _k(row):
+            f1 = row.get("original_file1") or row.get("file1")
+            f2 = row.get("original_file2") or row.get("file2")
+            return (str(f1), str(f2))
+        inputs_score = []
+        inputs_risk = []
+        for _, row in df.iterrows():
+            k = _k(row)
+            fb = fb_map.get(k, {})
+            inputs_score.append(fb.get("input_score", ""))
+            inputs_risk.append(fb.get("input_risk", ""))
+        df["input_score"] = inputs_score
+        df["input_risk"] = inputs_risk
+        # Save to a new folder
+        out_dir = path.join(run_dir, "feedback")
+        makedirs(out_dir, exist_ok=True)
+        df.to_csv(path.join(out_dir, "results_with_feedback.csv"), index=False)
+        return jsonify({"status": "ok", "folder": out_dir})
+    except Exception as e:
+        return jsonify({"error": "internal_error", "detail": str(e)}), 500
 
 
 if __name__ == "__main__":

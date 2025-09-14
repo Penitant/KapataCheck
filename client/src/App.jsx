@@ -2,6 +2,35 @@ import './App.css'
 import { LandingPage } from './pages/LandingPage'
 import { useEffect } from 'react'
 import Lenis from 'lenis'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { ResultsProvider, useResults } from './context/ResultsContext'
+import { Header } from './components/Header'
+import FeedbackPage from './pages/FeedbackPage'
+import NotFound from './pages/NotFound'
+import ProtectedRoute from './components/ProtectedRoute'
+
+function AppRoutes() {
+  const { results } = useResults()
+  const hasData = Array.isArray(results) && results.length > 0
+
+  return (
+    <BrowserRouter>
+      <Header />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route
+          path="/feedback"
+          element={
+            <ProtectedRoute hasData={hasData}>
+              <FeedbackPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
 
 function App() {
   useEffect(() => {
@@ -32,9 +61,9 @@ function App() {
   }, [])
 
   return (
-    <>
-      <LandingPage />
-    </>
+    <ResultsProvider>
+      <AppRoutes />
+    </ResultsProvider>
   )
 }
 

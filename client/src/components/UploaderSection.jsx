@@ -2,6 +2,9 @@ import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
 import fileSvg from '../assets/file.svg'
+import { useResults } from '../context/ResultsContext'
+import { motion } from 'framer-motion'
+import { softScale, fadeInUp } from './motionPresets'
 
 export function UploaderSection() {
   const [progress, setProgress] = useState(0);
@@ -9,6 +12,7 @@ export function UploaderSection() {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const { storePayload } = useResults()
 
   // List of accepted file types
   const acceptedFileTypes = [
@@ -20,14 +24,9 @@ export function UploaderSection() {
   ];
 
   const onDrop = useCallback((acceptedFiles) => {
-    // Validate file count
+    // Validate file count (min only)
     if (acceptedFiles.length < 2) {
       setError("Please upload at least 2 EoI documents for comparison");
-      return;
-    }
-    
-    if (acceptedFiles.length > 10) {
-      setError("Maximum 10 files can be uploaded at once");
       return;
     }
 
@@ -54,13 +53,13 @@ export function UploaderSection() {
     // Prepare form data
     const formData = new FormData();
     acceptedFiles.forEach(file => {
-      formData.append("documents", file);
+      formData.append("files", file);
     });
 
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:3500";
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
     // Upload documents for analysis
-    axios.post(`${apiBaseUrl}/analyze-batch`, formData, {
+    axios.post(`${apiBaseUrl}/verify`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
       responseType: 'json',
       onUploadProgress: (e) => {
@@ -68,26 +67,29 @@ export function UploaderSection() {
         setProgress(percent);
       }
     })
-    .then(res => {
-      console.log("Batch upload complete");
+  .then(res => {
       setIsProcessing(false);
       setProgress(100);
-      setSuccessMessage(`Successfully uploaded ${acceptedFiles.length} EoI documents for similarity analysis`);
+      // Store results globally and remain on landing page (no auto-navigation)
+      if (res?.data) {
+    storePayload(res.data)
+    // The results table below the uploader will animate in with the new data
+      } else {
+        setSuccessMessage(`Successfully uploaded ${acceptedFiles.length} EoI documents for similarity analysis`);
+      }
     })
     .catch(async (err) => {
       console.error("Upload error:", err);
       setIsProcessing(false);
       setProgress(0);
-      
       let errorMessage = "Error uploading documents. Please try again.";
-      
-      // Try to extract error message from response
       if (err.response?.data) {
-        if (typeof err.response.data === 'object' && err.response.data.message) {
-          errorMessage = err.response.data.message;
+        if (typeof err.response.data === 'object' && err.response.data.detail) {
+          errorMessage = err.response.data.detail;
+        } else if (typeof err.response.data === 'object' && err.response.data.error) {
+          errorMessage = err.response.data.error;
         }
       }
-      
       setError(errorMessage);
     });
   }, []);
@@ -101,9 +103,7 @@ export function UploaderSection() {
       "text/markdown": [".md"],
       "text/csv": [".csv"]
     },
-    multiple: true,
-    minFiles: 2,
-    maxFiles: 10
+    multiple: true
   });
 
   const resetUpload = () => {
@@ -117,7 +117,7 @@ export function UploaderSection() {
   return (
     <div className="max-w-4xl mx-auto py-10 px-4">
       <div className="flex flex-col items-center space-y-6">
-        <div
+        <motion.div
           {...getRootProps()}
           className={`
             text-center rounded-2xl h-64 w-full max-w-2xl
@@ -130,17 +130,23 @@ export function UploaderSection() {
             }
             ${isProcessing ? 'cursor-not-allowed opacity-75' : ''}
           `}
+          initial={softScale.initial}
+          animate={softScale.animate}
+          transition={softScale.transition}
         >
           <input {...getInputProps()} disabled={isProcessing} />
           
           {isProcessing ? (
             <div className="flex flex-col items-center space-y-4">
               <div className="text-white text-xl font-semibold">Uploading documents...</div>
-              <div className="w-64 bg-white/20 rounded-full h-3">
-                <div 
-                  className="bg-white h-3 rounded-full transition-all duration-300"
+              <div className="w-64 bg-white/20 rounded-full h-3 overflow-hidden">
+                <motion.div 
+                  className="bg-white h-3 rounded-full"
                   style={{ width: `${progress}%` }}
-                ></div>
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ type: 'tween', duration: 0.2 }}
+                />
               </div>
               <div className="text-sm text-white font-medium">{progress}% complete</div>
               <div className="text-xs text-white/80">
@@ -148,37 +154,40 @@ export function UploaderSection() {
               </div>
             </div>
           ) : isDragActive ? (
-            <div className="text-white text-xl font-semibold">Drop your EoI documents here...</div>
+            <motion.div className="text-white text-xl font-semibold" variants={fadeInUp} initial="initial" animate="animate" transition={fadeInUp.transition}>
+              Drop your EoI documents here...
+            </motion.div>
           ) : (
             <div className="flex flex-col items-center space-y-3">
-              <img src={fileSvg} alt="File Icon" className="w-12 h-12 brightness-0 invert" />
-              <div className="text-lg font-semibold text-white">Drag & drop EoI documents here</div>
-              <div className="text-sm text-white/80">or click to select files</div>
-              <div className="text-xs text-white/60 mt-2">
-                Upload 2-10 Company Profiles or Past Experience documents
-              </div>
-              <div className="text-xs text-white/60">
+              <motion.img src={fileSvg} alt="File Icon" className="w-12 h-12 brightness-0 invert" {...softScale} />
+              <motion.div className="text-lg font-semibold text-white" variants={fadeInUp} initial="initial" animate="animate">Drag & drop EoI documents here</motion.div>
+              <motion.div className="text-sm text-white/80" variants={fadeInUp} initial="initial" animate="animate" transition={{ delay: 0.05 }}>or click to select files</motion.div>
+              <motion.div className="text-xs text-white/60 mt-2" variants={fadeInUp} initial="initial" animate="animate" transition={{ delay: 0.1 }}>
+                Upload 2+ Company Profiles or Past Experience documents
+              </motion.div>
+              <motion.div className="text-xs text-white/60" variants={fadeInUp} initial="initial" animate="animate" transition={{ delay: 0.15 }}>
                 Supported formats: PDF, DOCX, TXT, MD, CSV | Max size: 25MB each
-              </div>
+              </motion.div>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {error && (
-          <div className="text-white p-4 max-w-2xl w-full text-center">
+          <motion.div className="text-white p-4 max-w-2xl w-full text-center" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <div className="font-semibold">❌ Error</div>
             <div className="mt-1">{error}</div>
-            <button 
+            <motion.button 
               onClick={resetUpload}
-              className="mt-3 px-4 py-2 border border-white/40 text-white rounded-lg hover:border-white/60 transition-colors"
+              className="mt-3 px-4 py-2 border border-white/40 text-white rounded-lg hover:border-white/60 hover:bg-white/10 transition-colors"
+              whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}
             >
               Try Again
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         )}
 
         {successMessage && (
-          <div className="text-white p-4 max-w-2xl w-full text-center">
+          <motion.div className="text-white p-4 max-w-2xl w-full text-center" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <div className="font-semibold">✅ Success</div>
             <div className="mt-1">{successMessage}</div>
             
@@ -198,13 +207,14 @@ export function UploaderSection() {
               </div>
             )}
             
-            <button 
+            <motion.button 
               onClick={resetUpload}
-              className="mt-3 px-6 py-2 border border-white/40 text-white rounded-lg hover:border-white/60 transition-colors font-medium"
+              className="mt-3 px-6 py-2 border border-white/40 text-white rounded-lg hover:border-white/60 hover:bg-white/10 transition-colors font-medium"
+              whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}
             >
               Upload More Documents
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         )}
       </div>
     </div>
