@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
 import fileSvg from '../assets/file.svg'
@@ -15,13 +15,13 @@ export function UploaderSection() {
   const { storePayload } = useResults()
 
   // List of accepted file types
-  const acceptedFileTypes = [
+  const acceptedFileTypes = useMemo(() => [
     "application/pdf",                                           // pdf
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // docx
     "text/plain",                                                // txt
     "text/markdown",                                             // md
     "text/csv"                                                   // csv
-  ];
+  ], []);
 
   const onDrop = useCallback((acceptedFiles) => {
     // Validate file count (min only)
@@ -92,7 +92,7 @@ export function UploaderSection() {
       }
       setError(errorMessage);
     });
-  }, []);
+  }, [acceptedFileTypes, storePayload]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

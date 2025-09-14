@@ -158,22 +158,37 @@ def verify_endpoint():
             return jsonify({"error": "Need at least two files for comparison"}), 400
 
         model_name = request.args.get("model") or "all-mpnet-base-v2"
-        # Flags
-        def _flag(name: str) -> bool:
-            return (request.args.get(name) or "").lower() in {"1", "true", "yes"}
 
-        use_para = _flag("paraphrase")
-        use_ce = _flag("ce")
-        use_hash = _flag("hash")
-        use_hybrid = _flag("hybrid")
-        use_cluster = _flag("cluster")
+        # Flags (heavy features default to OFF; pass paraphrase=1, ce=1, etc. to enable)
+        def _flag(name: str, default: bool = True) -> bool:
+            val = request.args.get(name)
+            if val is None:
+                return default
+            v = val.lower()
+            if v in {"1", "true", "yes", "on"}:
+                return True
+            if v in {"0", "false", "no", "off"}:
+                return False
+            return default
+
+        # Heavy/optional features default to OFF for faster local runs and tests
+        use_para = _flag("paraphrase", False)
+        use_ce = _flag("ce", False)
+        use_hash = _flag("hash", False)
+        use_hybrid = _flag("hybrid", False)
+        use_cluster = _flag("cluster", False)
         try:
             ce_top_k = int(request.args.get("ce_top_k") or 10)
             if ce_top_k < 0:
                 ce_top_k = 0
         except Exception:
             ce_top_k = 10
-        include_timings = _flag("timings")
+        include_timings = _flag("timings", False)
+
+        # Diagnostics nudge level: off|low|med|high
+        diag_level = (request.args.get("diag") or "med").lower()
+        if diag_level not in {"off", "low", "med", "high"}:
+            diag_level = "med"
 
         t0 = time.time()
 
@@ -185,6 +200,7 @@ def verify_endpoint():
             use_hash=use_hash,
             use_hybrid=use_hybrid,
             use_clustering=use_cluster,
+            diag_level=diag_level,
             ce_top_k=ce_top_k,
         )
         t1 = time.time()
@@ -206,7 +222,9 @@ def verify_endpoint():
             for r, p in zip(results, probs):
                 r["learned_prob"] = float(p)
                 r["learned_risk"] = (
-                    "High" if p >= 0.85 else "Medium" if p >= 0.7 else "Low" if p >= 0.5 else "Normal"
+                    "High"
+                    if p >= 0.85
+                    else "Medium" if p >= 0.7 else "Low" if p >= 0.5 else "Normal"
                 )
 
         # Add original filenames for client clarity (keep saved UUIDs for traceability)
@@ -224,7 +242,10 @@ def verify_endpoint():
         try:
             import json as _json
             import pandas as _pd
-            _pd.DataFrame(results).to_csv(path.join(run_dir, "results.csv"), index=False)
+
+            _pd.DataFrame(results).to_csv(
+                path.join(run_dir, "results.csv"), index=False
+            )
             with open(path.join(run_dir, "results.json"), "w", encoding="utf-8") as f:
                 _json.dump(results, f, ensure_ascii=False, indent=2)
             # Save meta
@@ -262,6 +283,7 @@ def verify_endpoint():
             "hybrid": use_hybrid,
             "cluster": use_cluster,
             "ce_top_k": ce_top_k,
+            "diag": diag_level,
             "count": len(results),
             "results": results,
             "run_id": run_id,
@@ -270,13 +292,19 @@ def verify_endpoint():
             payload["timings"] = {"analyze_ms": int((t1 - t0) * 1000)}
         return jsonify(payload)
     except Exception as e:
-        return jsonify({"error": "internal_error", "detail": str(e), "trace": _tb.format_exc()}), 500
+        return (
+            jsonify(
+                {"error": "internal_error", "detail": str(e), "trace": _tb.format_exc()}
+            ),
+            500,
+        )
 
 
 @app.route("/prepare_feedback_folder", methods=["POST"])
 def prepare_feedback_folder():
     """Create a derived folder from a run with two new columns (input_score,input_risk)."""
     import json as _json
+
     data = request.get_json(silent=True) or {}
     run_id = data.get("run_id")
     rows = data.get("rows") or []
@@ -290,10 +318,12 @@ def prepare_feedback_folder():
     json_path = path.join(run_dir, "results.json")
     try:
         import pandas as _pd
+
         if path.exists(csv_path):
             df = _pd.read_csv(csv_path)
         elif path.exists(json_path):
             import pandas as _pd
+
             with open(json_path, "r", encoding="utf-8") as f:
                 df = _pd.DataFrame(_json.load(f))
         else:
@@ -302,12 +332,17 @@ def prepare_feedback_folder():
         fb_map = {}
         for r in rows:
             k = (str(r.get("file1")), str(r.get("file2")))
-            fb_map[k] = {"input_score": r.get("input_score"), "input_risk": r.get("input_risk")}
+            fb_map[k] = {
+                "input_score": r.get("input_score"),
+                "input_risk": r.get("input_risk"),
+            }
+
         # Compute keys from df
         def _k(row):
             f1 = row.get("original_file1") or row.get("file1")
             f2 = row.get("original_file2") or row.get("file2")
             return (str(f1), str(f2))
+
         inputs_score = []
         inputs_risk = []
         for _, row in df.iterrows():

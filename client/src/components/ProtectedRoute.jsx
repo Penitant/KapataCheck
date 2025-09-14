@@ -1,9 +1,8 @@
 import React from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 
 // Simple guard: results exist in context or localStorage
 export default function ProtectedRoute({ hasData, children }) {
-  const location = useLocation()
   // Fallback: try to detect persisted data
   let persisted = false
   try {
@@ -12,7 +11,9 @@ export default function ProtectedRoute({ hasData, children }) {
       const parsed = JSON.parse(raw)
       persisted = Array.isArray(parsed?.results) && parsed.results.length > 0
     }
-  } catch {}
+  } catch {
+    // ignore JSON/storage errors
+  }
 
   if (!hasData && !persisted) {
     return (

@@ -154,6 +154,7 @@ def compare_texts(
     use_clustering: bool = False,
     raw_texts: Optional[List[str]] = None,
     ce_top_k: int = 10,
+    diag_level: str = "med",
 ) -> pd.DataFrame:
     if filenames is None:
         filenames = [f"doc_{i}.txt" for i in range(len(texts))]
@@ -266,7 +267,7 @@ def compare_texts(
                         # get indices of top ce_top_k
                         top_idx = sorted(
                             range(n_docs), key=lambda j: scores[j], reverse=True
-                        )[: ce_top_k]
+                        )[:ce_top_k]
                         cand.update(top_idx)
                 except Exception:
                     pass
@@ -275,7 +276,11 @@ def compare_texts(
                 try:
                     sims = E @ E[i]
                     sims[i] = -1.0
-                    top_idx = list(_np.argpartition(-sims, range(min(ce_top_k, n_docs - 1)))[:ce_top_k])
+                    top_idx = list(
+                        _np.argpartition(-sims, range(min(ce_top_k, n_docs - 1)))[
+                            :ce_top_k
+                        ]
+                    )
                     cand.update(top_idx)
                 except Exception:
                     # Fallback per-pair in loop
@@ -423,6 +428,7 @@ def compare_texts(
                 "simhash": r.get("simhash", 0.0),
                 "minhash": r.get("minhash", 0.0),
                 "cluster_same": float(r.get("cluster_same", 0)),
+                "__diag_level__": diag_level,
             }
         )
         r["score"] = score
@@ -440,6 +446,7 @@ def analyze_files(
     use_hybrid: bool = False,
     use_clustering: bool = False,
     ce_top_k: int = 10,
+    diag_level: str = "med",
 ) -> pd.DataFrame:
     texts: List[str] = []
     raw_texts: List[str] = []
@@ -467,6 +474,7 @@ def analyze_files(
         use_clustering=use_clustering,
         raw_texts=raw_texts,
         ce_top_k=ce_top_k,
+        diag_level=diag_level,
     )
 
 

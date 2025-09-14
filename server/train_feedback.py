@@ -13,8 +13,10 @@ except Exception:
         from simple_lr import _SimpleLogisticRegression, _DummyClassifier  # type: ignore
     except Exception:  # Fallback for edge environments
         import sys
+
         sys.path.append(os.path.dirname(__file__))
         from simple_lr import _SimpleLogisticRegression, _DummyClassifier  # type: ignore
+
 
 def _try_lightgbm_fit(X: List[List[float]], y: List[int]):
     try:
@@ -45,6 +47,7 @@ def _try_lightgbm_fit(X: List[List[float]], y: List[int]):
 
             def predict_proba(self, Xnew: List[List[float]]):
                 import numpy as _np  # type: ignore
+
                 preds = self.booster.predict(_np.array(Xnew))
                 out = []
                 for p in preds:
@@ -56,12 +59,10 @@ def _try_lightgbm_fit(X: List[List[float]], y: List[int]):
     except Exception:
         return None
 
+
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "feedback.db")
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
 MODEL_PATH = os.path.join(MODEL_DIR, "feedback_lr.pkl")
-
-
- 
 
 
 def load_feedback() -> Tuple[List[List[float]], List[int]]:
@@ -143,7 +144,11 @@ def train_and_save():
                     if auc > best_auc:
                         best_auc = auc
                         best = model
-            clf = best if best is not None else _SimpleLogisticRegression(lr=0.25, epochs=1200, l2=1e-3)
+            clf = (
+                best
+                if best is not None
+                else _SimpleLogisticRegression(lr=0.25, epochs=1200, l2=1e-3)
+            )
             if best is None:
                 clf.fit(X, y)
     os.makedirs(MODEL_DIR, exist_ok=True)

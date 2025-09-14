@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { fadeInUp, staggerChildren } from './motionPresets'
+import { fadeInUp } from './motionPresets'
 
 export function Introduction() {
   return (

@@ -166,12 +166,34 @@ def get_smart_score(similarities: Dict[str, float]) -> float:
                 pass
         # Optionally nudge with diagnostics post-model using tiny weights to reflect ancillary signals.
         try:
+            # Base weights
+            w = {
+                "bm25_pair": 0.02,
+                "ann_cosine": 0.015,
+                "simhash": 0.01,
+                "minhash": 0.01,
+                "cluster_same": 0.005,
+            }
+            # Scale by requested diag level
+            level = str(similarities.get("__diag_level__", "med")).lower()
+            scale = 1.0
+            if level in ("off", "none", "0"):
+                scale = 0.0
+            elif level in ("low", "lo"):
+                scale = 0.5
+            elif level in ("high", "hi"):
+                scale = 2.0
+            # compute nudge
             diag = 0.0
-            diag += 0.02 * float(similarities.get("bm25_pair", 0.0))
-            diag += 0.015 * float(similarities.get("ann_cosine", 0.0))
-            diag += 0.01 * float(similarities.get("simhash", 0.0))
-            diag += 0.01 * float(similarities.get("minhash", 0.0))
-            diag += 0.005 * float(similarities.get("cluster_same", 0.0))
+            diag += (w["bm25_pair"] * scale) * float(similarities.get("bm25_pair", 0.0))
+            diag += (w["ann_cosine"] * scale) * float(
+                similarities.get("ann_cosine", 0.0)
+            )
+            diag += (w["simhash"] * scale) * float(similarities.get("simhash", 0.0))
+            diag += (w["minhash"] * scale) * float(similarities.get("minhash", 0.0))
+            diag += (w["cluster_same"] * scale) * float(
+                similarities.get("cluster_same", 0.0)
+            )
             proba = float(max(0.0, min(1.0, proba + diag)))
         except Exception:
             pass

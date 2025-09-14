@@ -10,6 +10,7 @@ fits calibrators, reports ROC-AUC and PR-AUC, and saves calibrators under
 server/models/ (platt.pkl / isotonic.pkl). At inference, learn.get_smart_score
 can apply a chosen calibrator (if present) to model probabilities.
 """
+
 import os
 import pickle
 import sqlite3
@@ -37,7 +38,9 @@ def load_feedback() -> Tuple[List[List[float]], List[int]]:
             sel = base + ["re_rank_score", "label"]
         else:
             sel = base + ["label"]
-        cur.execute("SELECT " + ", ".join(sel) + " FROM feedback WHERE jaccard IS NOT NULL")
+        cur.execute(
+            "SELECT " + ", ".join(sel) + " FROM feedback WHERE jaccard IS NOT NULL"
+        )
         rows = cur.fetchall()
     X: List[List[float]] = []
     y: List[int] = []
@@ -46,9 +49,6 @@ def load_feedback() -> Tuple[List[List[float]], List[int]]:
         X.append([float(v if v is not None else 0.0) for v in feats])
         y.append(int(lab))
     return X, y
-
-
- 
 
 
 class Platt:
@@ -60,13 +60,16 @@ class Platt:
     @staticmethod
     def _sigmoid(z: float) -> float:
         import math
+
         if z < -35:
             return 1e-15
         if z > 35:
             return 1 - 1e-15
         return 1.0 / (1.0 + math.exp(-z))
 
-    def fit(self, scores: List[float], y: List[int], lr: float = 0.1, epochs: int = 800):
+    def fit(
+        self, scores: List[float], y: List[int], lr: float = 0.1, epochs: int = 800
+    ):
         A, B = 0.0, 0.0
         n = len(scores)
         for _ in range(epochs):
@@ -125,11 +128,16 @@ class Isotonic:
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Calibrate model probabilities with held-out feedback")
-    parser.add_argument("--split", type=float, default=0.2, help="Validation split fraction [0,1)")
+    parser = argparse.ArgumentParser(
+        description="Calibrate model probabilities with held-out feedback"
+    )
+    parser.add_argument(
+        "--split", type=float, default=0.2, help="Validation split fraction [0,1)"
+    )
     args = parser.parse_args()
 
     from .train_feedback import load_feedback  # reuse same loader
+
     X, y = load_feedback()
     if not X:
         print("No feedback data available")
@@ -174,16 +182,18 @@ def main():
     with open(ISOTONIC_PATH, "wb") as f:
         pickle.dump(iso, f)
 
-    print({
-        "n_val": len(y_val),
-        "auc_before": auc_before,
-        "pr_before": pr_before,
-        "auc_platt": auc_platt,
-        "pr_platt": pr_platt,
-        "auc_iso": auc_iso,
-        "pr_iso": pr_iso,
-        "paths": {"platt": PLATT_PATH, "isotonic": ISOTONIC_PATH}
-    })
+    print(
+        {
+            "n_val": len(y_val),
+            "auc_before": auc_before,
+            "pr_before": pr_before,
+            "auc_platt": auc_platt,
+            "pr_platt": pr_platt,
+            "auc_iso": auc_iso,
+            "pr_iso": pr_iso,
+            "paths": {"platt": PLATT_PATH, "isotonic": ISOTONIC_PATH},
+        }
+    )
 
 
 if __name__ == "__main__":

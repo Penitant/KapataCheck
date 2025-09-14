@@ -27,7 +27,9 @@ export function ResultsProvider({ children }) {
         })
         setRunId(payload?.run_id || null)
       }
-    } catch {}
+    } catch {
+      // ignore hydration errors from localStorage/JSON
+    }
   }, [])
 
   const storePayload = (payload) => {
@@ -47,13 +49,15 @@ export function ResultsProvider({ children }) {
     setRunId(payload?.run_id || null)
     try {
       localStorage.setItem('chakshu:analysis', JSON.stringify({ results: payload?.results || [], ...newMeta, run_id: payload?.run_id || null }))
-    } catch {}
+    } catch {
+      // ignore persistence errors
+    }
   }
 
   const clear = () => {
     setResults([])
     setMeta({})
-    try { localStorage.removeItem('chakshu:analysis') } catch {}
+  try { localStorage.removeItem('chakshu:analysis') } catch { /* ignore */ }
   }
 
   return (
