@@ -1,1 +1,50 @@
-.venv
+# Python caches
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE/editor
+.vscode/
+.idea/
+*.code-workspace
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Test/coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Typing/cache
+.mypy_cache/
+.pytype/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Local env & secrets
+.env
+.env.*
+
+# Project runtime artifacts
+server/data/*.db
+server/models/*.pkl
+server/artifacts/
+server/uploads/
+
+# Uploads handled via nested .gitignore to keep curated examples
+# server/uploads/* (see server/uploads/.gitignore)
+
+# Logs
+logs/
+*.log

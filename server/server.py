@@ -1,18 +1,28 @@
-# Import necessary modules
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 from os import makedirs, path
-import tempfile
-import uuid
+import os as _os
+import pickle
+import sqlite3
 from typing import List
+import uuid
+import time
 
 try:
-    from .verify import analyze_files
+    # Preferred relative imports when running as a package
+    from .db import init_db, insert_feedback, get_db_path
+    from .verify import (
+        analyze_files,
+    )  # assuming analyze_files exists and works as before
+    from .learn import get_smart_score, predict_proba_bulk, maybe_reload_model
 except Exception:
-    import sys, os
+    # Fallback for direct script execution
+    import sys, os as __os
 
-    sys.path.append(os.path.dirname(__file__))
+    sys.path.append(__os.path.dirname(__file__))
+    from db import init_db, insert_feedback, get_db_path  # type: ignore
     from verify import analyze_files  # type: ignore
+    from learn import get_smart_score, predict_proba_bulk, maybe_reload_model  # type: ignore
 
 # App initialization
 app = Flask(__name__)
@@ -26,54 +36,210 @@ UPLOAD_FOLDER = "server/uploads"
 makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+# Initialize SQLite DB
+init_db()
 
-# Define routes
+# Touch the model loader on startup
+maybe_reload_model()
+
+
 @app.route("/")
 def home():
-    return """
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>Chakshu | Backend</title>
-        </head>
-        <body>
-            <h1>Welcome to Chakshu Backend!</h1>
-        </body>
-        </html>
-    """
+    return "Tender similarity checking server."
+
+
+@app.route("/feedback", methods=["POST"])
+def collect_feedback():
+    data = request.get_json(silent=True) or {}
+    try:
+        scores = data.get("scores", {}) or {}
+        row = {
+            "file1": data.get("file1"),
+            "file2": data.get("file2"),
+            "label": int(data.get("label")),
+            "jaccard": scores.get("jaccard"),
+            "ngram": scores.get("ngram"),
+            "tfidf": scores.get("tfidf"),
+            "paraphrase": scores.get("paraphrase"),
+            "re_rank_score": scores.get("re_rank_score"),
+            "score": scores.get("score"),
+            "risk": scores.get("risk"),
+            "model": scores.get("model"),
+        }
+        insert_feedback(row)
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "detail": str(e)}), 400
+
+
+def get_uncertain_pairs(threshold_low=0.4, threshold_high=0.6, limit=20):
+    conn = sqlite3.connect(get_db_path())
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT file1, file2, jaccard, ngram, tfidf, paraphrase, score
+        FROM feedback
+        WHERE score BETWEEN ? AND ?
+        ORDER BY created_at DESC
+        LIMIT ?
+    """,
+        (threshold_low, threshold_high, limit),
+    )
+    results = cursor.fetchall()
+    conn.close()
+    pairs = []
+    for row in results:
+        pairs.append(
+            {
+                "file1": row[0],
+                "file2": row[1],
+                "jaccard": row[2],
+                "ngram": row[3],
+                "tfidf": row[4],
+                "paraphrase": row[5],
+                "score": row[6],
+            }
+        )
+    return pairs
+
+
+@app.route("/review")
+def review():
+    pairs = get_uncertain_pairs()
+    return render_template("review.html", pairs=pairs)
+
+
+@app.route("/retrain", methods=["POST"])
+def retrain():
+    import traceback as _tb
+
+    try:
+        try:
+            from .train_feedback import train_and_save  # type: ignore
+        except Exception:
+            from train_feedback import train_and_save  # type: ignore
+
+        train_and_save()
+        maybe_reload_model()
+        return jsonify({"status": "retrained"})
+    except Exception as e:
+        return (
+            jsonify(
+                {"error": "internal_error", "detail": str(e), "trace": _tb.format_exc()}
+            ),
+            500,
+        )
 
 
 @app.route("/verify", methods=["POST"])
-def verify():
-    """Accepts multiple files and returns similarity analysis.
-    Multipart form field name: 'files'. Returns list of pairwise results.
-    """
-    if "files" not in request.files:
-        return jsonify({"error": "No files provided (use form field 'files')"}), 400
+def verify_endpoint():
+    import traceback as _tb
 
-    files = request.files.getlist("files")
-    saved_paths: List[str] = []
-    for f in files:
-        if not f.filename:
-            continue
+    try:
+        if "files" not in request.files:
+            return jsonify({"error": "No files provided (use form field 'files')"}), 400
 
-        ext = path.splitext(f.filename)[1]
-        unique = f"{uuid.uuid4().hex}{ext}"
-        dest = path.join(app.config["UPLOAD_FOLDER"], unique)
-        f.save(dest)
-        saved_paths.append(dest)
+        files = request.files.getlist("files")
+        saved_paths: List[str] = []
+        original_name_by_basename = {}
+        for f in files:
+            if not f.filename:
+                continue
+            ext = path.splitext(f.filename)[1]
+            unique = f"{uuid.uuid4().hex}{ext}"
+            dest = path.join(app.config["UPLOAD_FOLDER"], unique)
+            f.save(dest)
+            saved_paths.append(dest)
+            original_name_by_basename[path.basename(dest)] = f.filename
 
-    if len(saved_paths) < 2:
-        return jsonify({"error": "Need at least two files for comparison"}), 400
+        if len(saved_paths) < 2:
+            return jsonify({"error": "Need at least two files for comparison"}), 400
 
-    model_name = request.args.get("model") or "all-mpnet-base-v2"
-    df = analyze_files(saved_paths, model_name=model_name)
+        model_name = request.args.get("model") or "all-mpnet-base-v2"
+        # Flags
+        def _flag(name: str) -> bool:
+            return (request.args.get(name) or "").lower() in {"1", "true", "yes"}
 
-    results = df.to_dict(orient="records")
-    return jsonify({"model": model_name, "count": len(results), "results": results})
+        use_para = _flag("paraphrase")
+        use_ce = _flag("ce")
+        use_hash = _flag("hash")
+        use_hybrid = _flag("hybrid")
+        use_cluster = _flag("cluster")
+        try:
+            ce_top_k = int(request.args.get("ce_top_k") or 10)
+            if ce_top_k < 0:
+                ce_top_k = 0
+        except Exception:
+            ce_top_k = 10
+        include_timings = _flag("timings")
+
+        t0 = time.time()
+
+        df = analyze_files(
+            saved_paths,
+            model_name=model_name,
+            use_paraphrase=use_para,
+            use_cross_encoder=use_ce,
+            use_hash=use_hash,
+            use_hybrid=use_hybrid,
+            use_clustering=use_cluster,
+            ce_top_k=ce_top_k,
+        )
+        t1 = time.time()
+        results = df.to_dict(orient="records")
+
+        # Augment with learned probabilities if a model is available
+        feats = [
+            [
+                r.get("jaccard", 0.0),
+                r.get("tfidf", 0.0),
+                r.get("ngram", 0.0),
+                r.get("paraphrase", 0.0),
+                r.get("re_rank_score", 0.0),
+            ]
+            for r in results
+        ]
+        probs = predict_proba_bulk(feats)
+        if probs is not None:
+            for r, p in zip(results, probs):
+                r["learned_prob"] = float(p)
+                r["learned_risk"] = (
+                    "High" if p >= 0.85 else "Medium" if p >= 0.7 else "Low" if p >= 0.5 else "Normal"
+                )
+
+        # Add original filenames for client clarity (keep saved UUIDs for traceability)
+        for r in results:
+            b1 = r.get("file1")
+            b2 = r.get("file2")
+            r["original_file1"] = original_name_by_basename.get(b1, b1)
+            r["original_file2"] = original_name_by_basename.get(b2, b2)
+
+        # Cleanup: delete saved UUID files unless explicitly kept via ?keep=true
+        keep = (request.args.get("keep") or "").lower() in {"1", "true", "yes"}
+        if not keep:
+            for pth in saved_paths:
+                try:
+                    _os.remove(pth)
+                except Exception:
+                    pass
+
+        payload = {
+                "model": model_name,
+                "paraphrase": use_para,
+                "cross_encoder": use_ce,
+                "hash": use_hash,
+                "hybrid": use_hybrid,
+                "cluster": use_cluster,
+                "ce_top_k": ce_top_k,
+                "count": len(results),
+                "results": results,
+            }
+        if include_timings:
+            payload["timings"] = {"analyze_ms": int((t1 - t0) * 1000)}
+        return jsonify(payload)
+    except Exception as e:
+        return jsonify({"error": "internal_error", "detail": str(e), "trace": _tb.format_exc()}), 500
 
 
-# Run the app
 if __name__ == "__main__":
     app.run()

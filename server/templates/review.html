@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Review Uncertain Pairs</title>
+    <style>
+      body { font-family: Arial, Helvetica, sans-serif; margin: 2rem; }
+      .pair { border:1px solid #ddd; margin:10px 0; padding:10px; border-radius: 6px; }
+      .cols { display:flex; gap: 1rem; }
+      .col { width: 50%; }
+      pre { white-space: pre-wrap; word-wrap: break-word; }
+      .scores { color:#555; font-size: 0.9rem; }
+      button { margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Review Uncertain Pairs</h1>
+    {% for pair in pairs %}
+    <div class="pair">
+        <h3>Similarity Score: {{ "%.2f"|format(pair.score) }}</h3>
+        <div class="scores">
+          jaccard={{ pair.jaccard }}, ngram={{ pair.ngram }}, tfidf={{ pair.tfidf }}, paraphrase={{ pair.paraphrase }}
+        </div>
+        <div class="cols">
+            <div class="col"><pre>{{ pair.file1 }}</pre></div>
+            <div class="col"><pre>{{ pair.file2 }}</pre></div>
+        </div>
+        <button onclick="submitFeedback('{{ pair.file1 }}', '{{ pair.file2 }}', 1)">Suspicious</button>
+        <button onclick="submitFeedback('{{ pair.file1 }}', '{{ pair.file2 }}', 0)">Clean</button>
+    </div>
+    {% endfor %}
+<script>
+function submitFeedback(file1, file2, label) {
+    fetch('/feedback', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            file1: file1,
+            file2: file2,
+            label: label,
+            scores: {}
+        })
+    }).then(r => r.ok ? location.reload() : alert('Error submitting feedback'));
+}
+</script>
+</body>
+</html>
