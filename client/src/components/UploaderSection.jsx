@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
+import fileSvg from '../assets/file.svg'
 
 export function UploaderSection() {
   const [progress, setProgress] = useState(0);
@@ -114,47 +115,49 @@ export function UploaderSection() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-10">
+    <div className="max-w-4xl mx-auto py-10 px-4">
       <div className="flex flex-col items-center space-y-6">
         <div
           {...getRootProps()}
           className={`
-            border-2 border-dashed border-gray-400
-            bg-white/5 text-black text-center 
-            rounded-xl h-64 w-full max-w-2xl
+            text-center rounded-2xl h-64 w-full max-w-2xl
             flex flex-col items-center justify-center 
-            cursor-pointer transition-all duration-200
-            ${isDragActive ? 'border-blue-500 bg-blue-50 scale-105' : ''}
-            ${isProcessing ? 'cursor-not-allowed opacity-75' : 'hover:bg-gray-50'}
+            cursor-pointer transition-all duration-300
+            backdrop-blur-2xl bg-white/2 border border-white/5
+            ${isDragActive 
+              ? 'scale-105 bg-white/4' 
+              : 'hover:bg-white/3'
+            }
+            ${isProcessing ? 'cursor-not-allowed opacity-75' : ''}
           `}
         >
           <input {...getInputProps()} disabled={isProcessing} />
           
           {isProcessing ? (
             <div className="flex flex-col items-center space-y-4">
-              <div className="text-gray-700 text-xl font-semibold">Uploading Documents...</div>
-              <div className="w-64 bg-gray-200 rounded-full h-3">
+              <div className="text-white text-xl font-semibold">Uploading documents...</div>
+              <div className="w-64 bg-white/20 rounded-full h-3">
                 <div 
-                  className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+                  className="bg-white h-3 rounded-full transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 ></div>
               </div>
-              <div className="text-sm text-gray-600 font-medium">{progress}% Complete</div>
-              <div className="text-xs text-gray-500">
+              <div className="text-sm text-white font-medium">{progress}% complete</div>
+              <div className="text-xs text-white/80">
                 Uploading {uploadedFiles.length} files
               </div>
             </div>
           ) : isDragActive ? (
-            <div className="text-blue-600 text-xl font-semibold">Drop your EoI documents here...</div>
+            <div className="text-white text-xl font-semibold">Drop your EoI documents here...</div>
           ) : (
             <div className="flex flex-col items-center space-y-3">
-              <div className="text-5xl">📄</div>
-              <div className="text-lg font-semibold text-gray-700">Drag & drop EoI documents here</div>
-              <div className="text-sm text-gray-500">or click to select files</div>
-              <div className="text-xs text-gray-400 mt-2">
+              <img src={fileSvg} alt="File Icon" className="w-12 h-12 brightness-0 invert" />
+              <div className="text-lg font-semibold text-white">Drag & drop EoI documents here</div>
+              <div className="text-sm text-white/80">or click to select files</div>
+              <div className="text-xs text-white/60 mt-2">
                 Upload 2-10 Company Profiles or Past Experience documents
               </div>
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-white/60">
                 Supported formats: PDF, DOCX, TXT, MD, CSV | Max size: 25MB each
               </div>
             </div>
@@ -162,12 +165,12 @@ export function UploaderSection() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg max-w-2xl w-full text-center">
+          <div className="text-white p-4 max-w-2xl w-full text-center">
             <div className="font-semibold">❌ Error</div>
             <div className="mt-1">{error}</div>
             <button 
               onClick={resetUpload}
-              className="mt-3 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
+              className="mt-3 px-4 py-2 border border-white/40 text-white rounded-lg hover:border-white/60 transition-colors"
             >
               Try Again
             </button>
@@ -175,18 +178,18 @@ export function UploaderSection() {
         )}
 
         {successMessage && (
-          <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg max-w-2xl w-full text-center">
+          <div className="text-white p-4 max-w-2xl w-full text-center">
             <div className="font-semibold">✅ Success</div>
             <div className="mt-1">{successMessage}</div>
             
             {uploadedFiles.length > 0 && (
-              <div className="mt-3 text-left bg-white p-3 rounded-lg max-h-48 overflow-y-auto">
-                <div className="text-sm font-medium mb-2">Uploaded Files:</div>
-                <ul className="text-xs space-y-1">
+              <div className="mt-3 text-left border border-white/20 p-3 rounded-lg max-h-48 overflow-y-auto">
+                <div className="text-sm font-medium mb-2 text-white">Uploaded files</div>
+                <ul className="text-xs space-y-1 text-white/80">
                   {uploadedFiles.map((file, index) => (
                     <li key={index} className="flex justify-between">
                       <span className="truncate max-w-xs">{file.name}</span>
-                      <span className="text-gray-500">
+                      <span className="text-white/60">
                         {(file.size / 1024).toFixed(1)} KB
                       </span>
                     </li>
@@ -197,7 +200,7 @@ export function UploaderSection() {
             
             <button 
               onClick={resetUpload}
-              className="mt-3 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors"
+              className="mt-3 px-6 py-2 border border-white/40 text-white rounded-lg hover:border-white/60 transition-colors font-medium"
             >
               Upload More Documents
             </button>

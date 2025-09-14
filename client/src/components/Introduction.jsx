@@ -4,21 +4,25 @@ export function Introduction() {
     
 
     return (
-        <section className="container mx-auto px-4 py-4">
-            <div className='text-center text-6xl font-bold mt-20'>Welcome to Chakshu</div>
-            <div className="max-w-3xl mx-auto mt-8 text-center">
-                <p className="text-xl mb-4">
-                    Chakshu is an AI-powered system that detects collusion in government procurement Expressions of Interest (EoIs).
+        <section className="container mx-auto px-4 py-20">
+            <h1 className='text-center text-5xl font-bold mb-8 text-white'>
+                Welcome to Chakshu
+            </h1>
+            <div className="max-w-3xl mx-auto text-center text-white space-y-6 backdrop-blur-2xl bg-white/2 rounded-2xl p-8 border border-white/5">
+                <p className="text-xl leading-relaxed">
+                    Chakshu is an AI-driven system to detect similarities in Expressions of Interest (EoIs) submitted by vendors.
                 </p>
-                <p className="text-lg mb-6">
-                    We analyze company profiles and past experience documents for lexical and semantic similarities to identify suspicious patterns that may indicate collusion among vendors.
+                <p className="text-lg leading-relaxed">
+                    It compares company profiles and past experience to surface lexical and semantic overlaps that may signal coordination.
                 </p>
-                <p className="text-lg mb-6">
-                    As per GFR 2017 and CVC procurement guidelines, this helps strengthen transparency, fairness, and accountability in the procurement process.
+                <p className="text-lg leading-relaxed">
+                    Built in line with GFR 2017 and CVC procurement guidance to support transparency, fairness, and accountability.
                 </p>
-                <p className="text-base">
-                    Upload your EoI documents to begin the analysis and combat practices that reduce opportunities for capable vendors and undermine value for public money.
-                </p>
+                <div className="pt-4">
+                    <p className="text-base text-white font-medium">
+                        Upload EoI documents to start the analysis
+                    </p>
+                </div>
             </div>
         </section>        
     )
