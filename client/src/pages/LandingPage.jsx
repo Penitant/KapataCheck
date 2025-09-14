@@ -1,7 +1,6 @@
 import React from 'react'
 import { Introduction } from '../components/Introduction'
 import { UploaderSection } from '../components/UploaderSection'
-import DarkVeil from '../components/DarkVeil'
 import ResultsTable from '../components/ResultsTable'
 import { useResults } from '../context/ResultsContext'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -19,23 +18,17 @@ export function LandingPage() {
   }
 
   return (
-    <div className="relative min-h-screen">
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <DarkVeil hueShift={40} scanlineIntensity={0.06} scanlineFrequency={0}/>
-      </div>
-      
-      <div className="relative z-10">
-        {notice && (
-          <div className="container mx-auto px-4 pt-6">
-            <Notification title="Heads up" message={notice} onClose={clearNotice} />
-          </div>
-        )}
-        <Introduction />
-        <UploaderSection />
-        {/* First table below the uploader section */}
-        <div className="mt-8">
-          <ResultsTable rows={(results || []).map((r, idx) => ({ id: idx, ...r }))} />
+    <div className="min-h-screen">
+      {notice && (
+        <div className="container mx-auto px-4 pt-6">
+          <Notification title="Heads up" message={notice} onClose={clearNotice} />
         </div>
+      )}
+      <Introduction />
+      <UploaderSection />
+      {/* First table below the uploader section */}
+      <div className="mt-10 pb-16">
+        <ResultsTable rows={(results || []).map((r, idx) => ({ id: idx, ...r }))} />
       </div>
     </div>
   )

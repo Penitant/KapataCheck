@@ -6,7 +6,7 @@ export default function ProtectedRoute({ hasData, children }) {
   // Fallback: try to detect persisted data
   let persisted = false
   try {
-    const raw = localStorage.getItem('chakshu:analysis')
+    const raw = localStorage.getItem('aalok:analysis')
     if (raw) {
       const parsed = JSON.parse(raw)
       persisted = Array.isArray(parsed?.results) && parsed.results.length > 0

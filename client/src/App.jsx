@@ -15,19 +15,21 @@ function AppRoutes() {
 
   return (
     <BrowserRouter>
-      <Header />
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route
-          path="/feedback"
-          element={
-            <ProtectedRoute hasData={hasData}>
-              <FeedbackPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+  <div className="min-h-screen bg-gradient-to-b from-sky-950 via-slate-950 to-teal-950">
+        <Header />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route
+            path="/feedback"
+            element={
+              <ProtectedRoute hasData={hasData}>
+                <FeedbackPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
     </BrowserRouter>
   )
 }

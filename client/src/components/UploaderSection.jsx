@@ -115,18 +115,18 @@ export function UploaderSection() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4">
+    <div className="max-w-5xl mx-auto py-12 px-4">
       <div className="flex flex-col items-center space-y-6">
         <motion.div
           {...getRootProps()}
           className={`
-            text-center rounded-2xl h-64 w-full max-w-2xl
+            text-center rounded-xl h-64 w-full max-w-3xl
             flex flex-col items-center justify-center 
             cursor-pointer transition-all duration-300
-            backdrop-blur-2xl bg-white/2 border border-white/5
+            bg-slate-900/90 ring-1 ring-slate-800
             ${isDragActive 
-              ? 'scale-105 bg-white/4' 
-              : 'hover:bg-white/3'
+              ? 'scale-105 bg-slate-900' 
+              : 'hover:bg-slate-800/80'
             }
             ${isProcessing ? 'cursor-not-allowed opacity-75' : ''}
           `}
@@ -138,10 +138,10 @@ export function UploaderSection() {
           
           {isProcessing ? (
             <div className="flex flex-col items-center space-y-4">
-              <div className="text-white text-xl font-semibold">Uploading documents...</div>
-              <div className="w-64 bg-white/20 rounded-full h-3 overflow-hidden">
+        <div className="text-white text-2xl font-semibold">Uploading documents...</div>
+        <div className="w-64 bg-slate-700 rounded-full h-3 overflow-hidden">
                 <motion.div 
-                  className="bg-white h-3 rounded-full"
+          className="bg-sky-500 h-3 rounded-full"
                   style={{ width: `${progress}%` }}
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
@@ -159,13 +159,13 @@ export function UploaderSection() {
             </motion.div>
           ) : (
             <div className="flex flex-col items-center space-y-3">
-              <motion.img src={fileSvg} alt="File Icon" className="w-12 h-12 brightness-0 invert" {...softScale} />
-              <motion.div className="text-lg font-semibold text-white" variants={fadeInUp} initial="initial" animate="animate">Drag & drop EoI documents here</motion.div>
-              <motion.div className="text-sm text-white/80" variants={fadeInUp} initial="initial" animate="animate" transition={{ delay: 0.05 }}>or click to select files</motion.div>
-              <motion.div className="text-xs text-white/60 mt-2" variants={fadeInUp} initial="initial" animate="animate" transition={{ delay: 0.1 }}>
+        <motion.img src={fileSvg} alt="File Icon" className="w-14 h-14 brightness-0 invert" {...softScale} />
+        <motion.div className="text-2xl font-semibold text-white" variants={fadeInUp} initial="initial" animate="animate">Drag & drop EoI documents here</motion.div>
+        <motion.div className="text-base text-white/80" variants={fadeInUp} initial="initial" animate="animate" transition={{ delay: 0.05 }}>or click to select files</motion.div>
+        <motion.div className="text-sm text-white/70 mt-2" variants={fadeInUp} initial="initial" animate="animate" transition={{ delay: 0.1 }}>
                 Upload 2+ Company Profiles or Past Experience documents
               </motion.div>
-              <motion.div className="text-xs text-white/60" variants={fadeInUp} initial="initial" animate="animate" transition={{ delay: 0.15 }}>
+        <motion.div className="text-sm text-white/70" variants={fadeInUp} initial="initial" animate="animate" transition={{ delay: 0.15 }}>
                 Supported formats: PDF, DOCX, TXT, MD, CSV | Max size: 25MB each
               </motion.div>
             </div>
@@ -173,12 +173,12 @@ export function UploaderSection() {
         </motion.div>
 
         {error && (
-          <motion.div className="text-white p-4 max-w-2xl w-full text-center" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+      <motion.div className="text-white p-4 max-w-2xl w-full text-center" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <div className="font-semibold">❌ Error</div>
             <div className="mt-1">{error}</div>
             <motion.button 
               onClick={resetUpload}
-              className="mt-3 px-4 py-2 border border-white/40 text-white rounded-lg hover:border-white/60 hover:bg-white/10 transition-colors"
+        className="mt-3 px-4 py-2 bg-rose-600 text-white rounded-md hover:bg-rose-500 transition-colors"
               whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}
             >
               Try Again
@@ -192,9 +192,9 @@ export function UploaderSection() {
             <div className="mt-1">{successMessage}</div>
             
             {uploadedFiles.length > 0 && (
-              <div className="mt-3 text-left border border-white/20 p-3 rounded-lg max-h-48 overflow-y-auto">
+              <div className="mt-3 text-left ring-1 ring-slate-800 p-3 rounded-md max-h-48 overflow-y-auto bg-slate-900/80">
                 <div className="text-sm font-medium mb-2 text-white">Uploaded files</div>
-                <ul className="text-xs space-y-1 text-white/80">
+                <ul className="text-sm space-y-1 text-white/80">
                   {uploadedFiles.map((file, index) => (
                     <li key={index} className="flex justify-between">
                       <span className="truncate max-w-xs">{file.name}</span>
@@ -209,7 +209,7 @@ export function UploaderSection() {
             
             <motion.button 
               onClick={resetUpload}
-              className="mt-3 px-6 py-2 border border-white/40 text-white rounded-lg hover:border-white/60 hover:bg-white/10 transition-colors font-medium"
+              className="mt-3 px-6 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-500 transition-colors font-medium"
               whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}
             >
               Upload More Documents

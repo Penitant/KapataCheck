@@ -3,7 +3,6 @@ import { useResults } from '../context/ResultsContext'
 import { motion } from 'framer-motion'
 import { fadeIn } from '../components/motionPresets'
 import ResultsTable from '../components/ResultsTable'
-import DarkVeil from '../components/DarkVeil'
 
 export default function FeedbackPage() {
   const { results, runId } = useResults()
@@ -96,26 +95,21 @@ export default function FeedbackPage() {
   }
 
   return (
-    <div className="relative min-h-screen">
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <DarkVeil hueShift={40} scanlineIntensity={0.06} scanlineFrequency={0} />
-      </div>
-      <div className="relative z-10">
-        <section className="container mx-auto px-4 py-10">
-          <motion.div className="max-w-6xl mx-auto text-white backdrop-blur-2xl bg-white/2 border border-white/5 rounded-2xl p-6"
-            initial={fadeIn.initial} animate={fadeIn.animate} transition={fadeIn.transition}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold">Feedback</h2>
-              <motion.button onClick={submit} className="px-4 py-2 border border-white/40 rounded-lg hover:border-white/70 hover:bg-white/10 transition"
-                whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
-                Submit All
-              </motion.button>
-            </div>
+    <div className="min-h-screen">
+      <section className="container mx-auto px-4 py-12">
+        <motion.div className="max-w-6xl mx-auto text-white p-8"
+          initial={fadeIn.initial} animate={fadeIn.animate} transition={fadeIn.transition}>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-extrabold tracking-tight">Feedback</h2>
+            <motion.button onClick={submit} className="px-5 py-2.5 rounded-md bg-sky-600 text-white hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-950 transition"
+              whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+              Submit All
+            </motion.button>
+          </div>
 
-            <ResultsTable rows={rows} editable onChange={handleChange} />
-          </motion.div>
-        </section>
-      </div>
+          <ResultsTable rows={rows} editable onChange={handleChange} />
+        </motion.div>
+      </section>
     </div>
   )
 }

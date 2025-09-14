@@ -6,17 +6,21 @@ import { fadeIn, softScale, hoverLift } from './motionPresets'
 
 export function Header() {
   return (
-    <motion.header className='grid grid-cols-3 items-center p-8 pb-6 relative z-20'
-      initial={fadeIn.initial} animate={fadeIn.animate} transition={fadeIn.transition}>
-      <motion.div className='text-white text-4xl font-bold' {...hoverLift}>
-        <Link to="/" className="hover:text-gray-200 transition-colors">Chakshu</Link>
-      </motion.div>
-      <motion.div className='flex justify-center items-center' {...softScale}>
-        <img src={eyeImage} alt="eyeSearchIcon" className="w-16 h-16 brightness-0 invert" />
-      </motion.div>
-      <motion.div className='text-white text-2xl font-medium text-right' {...hoverLift}>
-        <Link to="/feedback" className="hover:text-gray-200 transition-colors">Feedback</Link>
-      </motion.div>
+    <motion.header
+  className='w-full bg-transparent'
+      initial={fadeIn.initial} animate={fadeIn.animate} transition={fadeIn.transition}
+    >
+      <div className='max-w-7xl mx-auto grid grid-cols-3 items-center px-6 py-4'>
+        <motion.div className='text-white text-3xl sm:text-4xl font-extrabold tracking-tight' {...hoverLift}>
+          <Link to="/" className="hover:text-sky-300 transition-colors">Aalok</Link>
+        </motion.div>
+        <motion.div className='flex justify-center items-center' {...softScale}>
+          <img src={eyeImage} alt="eyeSearchIcon" className="w-12 h-12 sm:w-14 sm:h-14 brightness-0 invert" />
+        </motion.div>
+        <motion.div className='text-white text-2xl font-medium text-right' {...hoverLift}>
+          <Link to="/feedback" className="hover:text-sky-300 transition-colors">Feedback</Link>
+        </motion.div>
+      </div>
     </motion.header>
   )
 }
