@@ -1,6 +1,6 @@
-# Chakshu – EOI similarity detection service
+# KapataCheck – EOI similarity detection service
 
-Chakshu surfaces potential coordination or reuse across Expressions of Interest (EOIs) and similar tender documents. It combines fast lexical signals with semantic models, re‑ranking, and light self‑learning. A calibrated probability‑like score and risk label are produced per file pair.
+KapataCheck surfaces potential coordination or reuse across Expressions of Interest (EOIs) and similar tender documents. It combines fast lexical signals with semantic models, re‑ranking, and light self‑learning. A calibrated probability‑like score and risk label are produced per file pair.
 
 Highlights:
 - Multi‑signal features: Jaccard, char n‑grams, TF‑IDF cosine, paraphrase embeddings (optional), CrossEncoder re‑rank (optional)

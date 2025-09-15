@@ -10,7 +10,7 @@ export function ResultsProvider({ children }) {
   // Hydrate from localStorage on first mount
   useEffect(() => {
     try {
-          const raw = localStorage.getItem('aalok:analysis')
+          const raw = localStorage.getItem('kapatacheck:analysis')
       if (raw) {
         const payload = JSON.parse(raw)
         setResults(payload?.results || [])
@@ -48,7 +48,7 @@ export function ResultsProvider({ children }) {
     setMeta(newMeta)
     setRunId(payload?.run_id || null)
     try {
-  localStorage.setItem('aalok:analysis', JSON.stringify({ results: payload?.results || [], ...newMeta, run_id: payload?.run_id || null }))
+  localStorage.setItem('kapatacheck:analysis', JSON.stringify({ results: payload?.results || [], ...newMeta, run_id: payload?.run_id || null }))
     } catch {
       // ignore persistence errors
     }
@@ -57,7 +57,7 @@ export function ResultsProvider({ children }) {
   const clear = () => {
     setResults([])
     setMeta({})
-    try { localStorage.removeItem('aalok:analysis') } catch { /* ignore */ }
+  try { localStorage.removeItem('kapatacheck:analysis') } catch { /* ignore */ }
   }
 
   return (

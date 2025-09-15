@@ -14,7 +14,9 @@ def test_verify_endpoint_min_similarity():
     assert os.path.exists(SAMPLE_B), f"Missing {SAMPLE_B}"
 
     # Optional: allow overriding base URL via env var
-    base_url = os.environ.get("CHAKSHU_BASE_URL", "http://127.0.0.1:5000")
+    base_url = os.environ.get("KAPATACHECK_BASE_URL") or os.environ.get(
+        "CHAKSHU_BASE_URL", "http://127.0.0.1:5000"
+    )
     url = f"{base_url}/verify?model=all-mpnet-base-v2"
 
     # Build multipart form

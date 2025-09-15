@@ -47,7 +47,7 @@ maybe_reload_model()
 
 @app.route("/")
 def home():
-    return "Tender similarity checking server."
+    return "KapataCheck — Tender similarity checking server."
 
 
 @app.route("/feedback", methods=["POST"])
