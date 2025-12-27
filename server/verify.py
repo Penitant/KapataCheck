@@ -27,11 +27,6 @@ def clean_text(text: str) -> str:
 
 
 def jaccard_similarity(a: str, b: str) -> float:
-    """
-    What it catches: direct copy/paste at the word level, shared boilerplate, and repeated phrases.
-    Why useful: very interpretable signal—“how much of the vocabulary is shared.” Great for templated or lightly tweaked documents.
-    Limits: synonyms/rewording drop the score; sensitive to tokenization.
-    """
     set_a, set_b = set(a.split()), set(b.split())
     intersection = set_a & set_b
     union = set_a | set_b
@@ -41,11 +36,6 @@ def jaccard_similarity(a: str, b: str) -> float:
 
 
 def ngram_similarity(a: str, b: str, n: int = 4) -> float:
-    """
-    What it catches: near-duplicates with small obfuscations (e.g., punctuation changes, spacing, minor typos, pluralization); detects reused strings even when token boundaries shift.
-    Why useful: robust to superficial edits; stronger indicator of literal copying than Jaccard.
-    Limits: less semantic; can be noisy if documents share many short common substrings.
-    """
     ngrams = lambda s: set([s[i : i + n] for i in range(max(0, len(s) - n + 1))])
     ngrams_a, ngrams_b = ngrams(a), ngrams(b)
     intersection = ngrams_a & ngrams_b
@@ -56,11 +46,6 @@ def ngram_similarity(a: str, b: str, n: int = 4) -> float:
 
 
 def tfidf_cosine_similarity(texts: List[str]) -> np.ndarray:
-    """
-    What it catches: topical and phrase-level overlap beyond exact copy—weights distinctive terms more than common ones.
-    Why useful: mitigates stopword effects; scalable and fast, good “broad net” across many files.
-    Limits: still lexical; paraphrases or synonym swaps reduce similarity.
-    """
     n = len(texts)
     if n == 0:
         return np.zeros((0, 0))
@@ -86,12 +71,6 @@ def _chunk_words(text: str, words_per_chunk: int = 200) -> List[str]:
 
 
 def paraphrase_similarity(a: str, b: str, model: Any) -> float:
-    """
-    What it catches: reworded content, paraphrases, and semantically equivalent passages (the typical way to evade copy detection).
-    Why useful: goes beyond lexical matching; captures meaning-level similarity.
-    Design detail: we chunk text and take the 90th percentile of chunk×chunk cosine scores to highlight strong local matches without being diluted by unrelated sections (common in long docs).
-    Limits: heavier compute; can over-score generic, high-level language; needs careful thresholds.
-    """
     blocks_a = _chunk_words(a, 200)
     blocks_b = _chunk_words(b, 200)
     if not any(blocks_a) or not any(blocks_b):

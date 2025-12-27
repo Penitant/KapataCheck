@@ -1,0 +1,9 @@
+cd .\client\                                         
+$env:Path = "C:\Program Files\nodejs;$env:Path"      
+$env:Path = "C:\Program Files (x86)\nodejs;$env:Path"
+$env:Path = "$env:USERPROFILE\\AppData\\Local\\Programs\\nodejs;$env:Path"
+npm run dev
+
+
+.\.venv\Scripts\Activate.ps1
+python -m server.server
